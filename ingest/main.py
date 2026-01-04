@@ -117,14 +117,27 @@ def build_vehicle_rows(feed: gtfs_realtime_pb2.FeedMessage):
         })
     return rows
 
-def insert_rows(table: str, rows: list[dict]):
+def insert_rows(table: str, rows: list[dict], chunk_size: int = 500):
+    """
+    Insert rows to BigQuery in chunks to avoid 413 (payload too large).
+    """
     if not rows:
         return 0
+
     table_id = f"{BQ_PROJECT}.{BQ_DATASET}.{table}"
-    errors = bq.insert_rows_json(table_id, rows)
-    if errors:
-        raise RuntimeError(str(errors))
-    return len(rows)
+    total = 0
+
+    for i in range(0, len(rows), chunk_size):
+        chunk = rows[i:i + chunk_size]
+        errors = bq.insert_rows_json(table_id, chunk)
+
+        if errors:
+            raise RuntimeError(f"BigQuery insert errors (chunk {i}-{i+len(chunk)}): {errors}")
+
+        total += len(chunk)
+
+    return total
+
 
 @app.get("/")
 def health():
