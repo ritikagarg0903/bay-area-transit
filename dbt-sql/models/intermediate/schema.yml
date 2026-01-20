@@ -1,0 +1,55 @@
+version: 2
+
+models:
+  - name: int_trip_stop_events_deduped
+    description: >
+      Incremental table that serves as the clean 'Golden Record' for all stop events.
+      Deduplicates overlapping API predictions and applies sanity filters to remove 
+      'midnight crossing' bugs (timestamps resulting in >4 hour delays).
+    columns:
+      - name: event_key
+        description: "Primary Key. Surrogate key derived from trip_id + stop_id + event_type."
+        tests:
+          - unique
+          - not_null
+
+      - name: route_id
+        description: "The bus/train route identifier."
+        tests:
+          - not_null
+
+      - name: event_time
+        description: "The actual or estimated time of the stop event (UTC)."
+        tests:
+          - not_null
+
+      - name: delay_sec
+        description: >
+          Delay in seconds. 
+          Includes data quality filter: only values between -1800s (30m early) 
+          and +14400s (4h late) are retained.
+
+  - name: int_route_delay_hourly
+    description: >
+      Aggregated hourly performance metrics by route. 
+      Uses incremental processing to recalculate only the last 6 hours of data.
+      Calculates statistical percentiles (p50, p90) to capture the full distribution of rider experience.
+    columns:
+      - name: route_id
+        description: "The route identifier."
+        tests:
+          - not_null
+
+      - name: event_hour
+        description: "Timestamp truncated to the hour. Represents the analysis window."
+        tests:
+          - not_null
+
+      - name: p50_delay_sec
+        description: "Median delay (50th percentile). The most representative metric for 'typical' delay."
+
+      - name: p90_delay_sec
+        description: "90th Percentile delay. Represents the 'bad day' scenario for riders."
+
+      - name: pct_events_delayed_5m
+        description: "Key Performance Indicator (KPI). The percentage of all stop events that were delayed > 5 minutes."

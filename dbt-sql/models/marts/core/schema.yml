@@ -1,0 +1,95 @@
+version: 2
+
+models:
+  - name: dim_route
+    description: "Route dimension derived from GTFS-RT trip updates. Validated distinct list of active routes."
+    columns:
+      - name: route_id
+        description: "Primary Key. Transit route identifier (e.g., '38', 'F', 'DALY')."
+        tests: [not_null, unique]
+
+  - name: dim_date
+    description: "Date dimension generated from observed event timestamps. Enables continuous time-series reporting."
+    columns:
+      - name: date_day
+        description: "Primary Key. Calendar day."
+        tests: [not_null, unique]
+      - name: day_name
+        description: "Full name of the day (e.g., 'Monday', 'Tuesday'). Useful for weekday vs weekend analysis."
+
+  - name: fct_route_delay_hourly
+    description: >
+      Hourly delay and reliability metrics by route. 
+      Grain: One row per route per hour.
+      Contains statistical distributions (p50/p90) for deep-dive analysis.
+    tests:
+      - unique:
+          column_name: "concat(route_id, '-', cast(event_hour as string))"
+    columns:
+      - name: route_id
+        tests: [not_null]
+      - name: event_hour
+        tests: [not_null]
+      - name: num_events
+        description: "Sample size. Number of stop events observed in this route-hour."
+      - name: avg_delay_sec
+        description: "Average delay in seconds."
+      - name: p50_delay_sec
+        description: "Median delay (50th percentile). Represents 'typical' rider experience."
+      - name: p90_delay_sec
+        description: "90th Percentile delay. Represents 'worst-case' rider experience."
+      - name: pct_events_delayed_5m
+        description: "Reliability KPI. Share of events delayed >= 5 minutes."
+
+  - name: fct_route_delay_daily
+    description: >
+      Daily rollup of transit reliability metrics. 
+      Grain: One row per route per day.
+      Optimized for high-level trend analysis.
+    columns:
+      - name: route_id
+        tests: [not_null]
+      - name: date_day
+        tests: [not_null]
+      - name: total_events
+        description: "Total trip updates observed for the route on this day."
+      - name: avg_delay_sec
+        description: "Weighted average delay for the entire day."
+
+  - name: fct_route_delay_daily_compare
+    description: >
+      Comparison Mart for Executive Dashboards.
+      Contains 'Lag' metrics to calculate Week-over-Week (WoW) and Day-over-Day (DoD) performance growth.
+    columns:
+      - name: route_id
+        tests: [not_null]
+      - name: date_day
+        tests: [not_null]
+      - name: wow_avg_delay_sec
+        description: "Change in average delay compared to the same day last week (Current - Previous)."
+      - name: wow_pct_delayed
+        description: "Change in % severe delays compared to the same day last week."
+
+  - name: fct_latest_vehicle_positions
+    description: >
+      Live Fleet Snapshot. 
+      Filters the raw stream to keep only the single most recent location ping per vehicle.
+      Enriched with 'current_delay_sec' by joining to Trip Updates.
+    columns:
+      - name: vehicle_id
+        description: "Primary Key. Physical Bus/Train ID."
+        tests: [not_null, unique]
+      - name: route_id
+        description: "The route this vehicle is currently serving."
+      - name: current_delay_sec
+        description: "The latest predicted delay for this vehicle's active trip. Used for Heatmap weighting."
+      - name: minutes_since_update
+        description: "Data Freshness metric. Used to filter out 'ghost buses' (inactive vehicles > 20 mins)."
+
+  - name: mart_data_freshness
+    description: >
+      System Health Monitor. 
+      Tracks the latency of the ingestion pipeline to ensure dashboard users trust the data.
+    columns:
+      - name: hours_since_last_feed
+        description: "Elapsed time since the last successful API ingestion. Alerts if > 2 hours."

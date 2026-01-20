@@ -1,0 +1,20 @@
+name: bay_area_transit
+version: "1.0.0"
+config-version: 2
+
+profile: bay_area_transit
+model-paths: ["models"]
+
+models:
+  bay_area_transit:
+    staging:
+      +materialized: view
+      +tags: ["daily_run"]
+
+    intermediate:
+      +materialized: view
+
+    marts:
+      core:
+        +materialized: table
+        +tags: ["bi_layer"]

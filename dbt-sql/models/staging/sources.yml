@@ -1,0 +1,27 @@
+version: 2
+
+sources:
+  - name: bay_area_transit_rt
+    description: >
+      Raw GTFS Realtime feeds ingested from the 511.org Open Data API. 
+      Data is polled and loaded via a Python script running on Google Cloud Run.
+    database: portfolio-project-483219
+    schema: bay_area_transit_rt
+    
+
+    freshness:
+      warn_after: {count: 60, period: minute}
+    loaded_at_field: ingested_at
+
+    tables:
+      - name: raw_trip_updates
+        description: >
+          Append-only log of TripUpdate feeds. 
+          Contains predictions for stop arrivals and departures.
+          Partitioned by ingestion time.
+
+      - name: raw_vehicle_positions
+        description: >
+          Append-only log of VehiclePosition feeds. 
+          Contains real-time lat/long coordinates and speed for active vehicles.
+          Partitioned by ingestion time.

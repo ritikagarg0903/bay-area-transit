@@ -1,0 +1,72 @@
+version: 2
+
+models:
+  - name: stg_trip_updates
+    description: >
+      Cleaned Trip Updates GTFS-RT feed from 511 (regional). 
+      One row per stop-level event (arrival/departure). 
+      Filters out rows with missing Route IDs to ensure downstream data quality.
+    columns:
+      - name: event_key
+        description: "Primary Key. A hash of trip_id, stop_id, and event_type."
+        tests:
+          - unique
+          - not_null
+
+      - name: event_time
+        description: "The estimated or actual time of the arrival/departure event (UTC)."
+        tests:
+          - not_null
+
+      - name: event_type
+        description: "Indicates if the timing is for an ARRIVAL at or DEPARTURE from a stop."
+        tests:
+          - accepted_values:
+              values: ["ARRIVAL", "DEPARTURE"]
+
+      - name: trip_id
+        description: "Unique identifier for the transit trip."
+        tests:
+          - not_null
+
+      - name: route_id
+        description: "Identifier for the transit route (e.g., '38', 'F', 'DALY')."
+        tests:
+          - not_null
+
+      - name: stop_id
+        description: "Unique identifier for the stop."
+
+      - name: delay_sec
+        description: "The delay in seconds relative to the schedule. Positive = Late, Negative = Early."
+
+  - name: stg_vehicle_positions
+    description: >
+      Cleaned Vehicle Positions GTFS-RT feed from 511 (regional). 
+      One row per vehicle ping. 
+      Tracks the real-time location of the fleet.
+    columns:
+      - name: vehicle_event_key
+        description: "Primary Key. A hash of vehicle_id and timestamp."
+        tests:
+          - unique
+          - not_null
+
+      - name: vehicle_id
+        description: "Unique identifier for the physical vehicle (Bus/Train ID)."
+        tests:
+          - not_null
+
+      - name: timestamp
+        description: "The time the vehicle position was reported (UTC)."
+        tests:
+          - not_null
+
+      - name: position_lat
+        description: "Latitude of the vehicle."
+
+      - name: position_lon
+        description: "Longitude of the vehicle."
+        
+      - name: speed
+        description: "Instantaneous speed of the vehicle in meters per second."

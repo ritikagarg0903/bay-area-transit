@@ -1,0 +1,32 @@
+version: 2
+
+exposures:
+  - name: bay_area_transit_ops_dashboard
+    label: "Bay Area Transit: Performance Monitor"
+    type: dashboard
+    maturity: high
+    url: "https://lookerstudio.google.com/reporting/c9c3b12e-2604-4f5c-83b8-4b546f38feb4"
+    description: >
+      Executive operations dashboard tracking real-time fleet positions, 
+      schedule adherence, and week-over-week reliability trends.
+      Built in Looker Studio.
+    
+    depends_on:
+      # Heatmaps & Deep Dives
+      - ref('fct_route_delay_hourly')
+      
+      # Trend Lines & Executive KPIs
+      - ref('fct_route_delay_daily_compare')
+      
+      # Live Map
+      - ref('fct_latest_vehicle_positions')
+      
+      # Data Freshness Header
+      - ref('mart_data_freshness')
+      
+      # Filters & Dimensions
+      - ref('dim_route')
+      - ref('dim_date')
+
+    owner:
+      name: "Ritika Garg"
