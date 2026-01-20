@@ -111,6 +111,10 @@ I defined schema tests (`schema.yml`) to catch data quality issues before they r
 
 ## 📊 Dashboard Overview
 
+![Dashboard Screenshot](assets/bay_area_dashboard_screenshot.png)
+
+[![View Dashboard](https://img.shields.io/badge/View_Live_Dashboard-Looker_Studio-blue?style=for-the-badge&logo=google-looker-studio)](https://lookerstudio.google.com/reporting/c9c3b12e-2604-4f5c-83b8-4b546f38feb4/page/VinlF)
+
 The output is a live Looker Studio Dashboard divided into three strategic sections:
 
 ### 1. Executive Scorecards
@@ -136,17 +140,8 @@ Instead of a crowded map of bus dots, I engineered a **Delay Heatmap**.
 
 ## 🛠️ Tech Stack
 
-* **Language:** Python 3.9 (Ingestion Script)
+* **Language:** Python 3 (Ingestion Script)
 * **Orchestration:** Google Cloud Run Scheduler
 * **Data Warehouse:** Google BigQuery
 * **Transformation:** dbt (Data Build Tool) - *Core/Incremental/Snapshot/Testing*
 * **BI Tool:** Looker Studio
-* **Format:** GTFS-Realtime (Protobuf)
-
----
-
-## 🚀 Future Improvements
-
-* **Orchestration:** Migrate from Cloud Scheduler to **Airflow** or **Dagster** for better dependency graphs and failure retries.
-* **Data Quality:** Implement **Great Expectations** to catch schema drifts from the 511.org API automatically.
-* **Speed Analysis:** Use BigQuery GIS functions to calculate the average speed between specific stop segments to identify slow street corridors.
