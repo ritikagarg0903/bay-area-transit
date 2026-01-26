@@ -39,7 +39,8 @@ The core engineering value of this project lies in the **Data Transformation Lay
 ### 1. Optimization: Incremental Materialization
 
 **The Challenge:** Processing millions of raw JSON rows every hour became slow and costly as the dataset grew.
-**The SQL Solution:** Converted the heavy transformation models to **Incremental Models**. This ensures dbt only processes new data that arrived since the last run, significantly reducing compute costs and latency.
+
+**The SQL Solution:** Converted the heavy transformation models to Incremental Models. This ensures dbt only processes new data that arrived since the last run, significantly reducing compute costs and latency.
 
 ```sql
 {{ config(materialized='incremental', unique_key='event_key') }}
@@ -53,6 +54,7 @@ The core engineering value of this project lies in the **Data Transformation Lay
 ### 2. Complex Deduplication (Window Functions)
 
 **The Challenge:** The API is polled every 20 minutes, but prediction windows overlap. A single bus arrival might be predicted 5 times with slightly different timestamps.
+
 **The SQL Solution:** I used `ROW_NUMBER()` window functions to identify and keep only the *most recent* prediction for every unique trip-stop event, creating a clean "golden record" for analysis.
 
 ```sql
@@ -67,6 +69,7 @@ QUALIFY ROW_NUMBER() OVER (
 ### 3. Geospatial Joining for Live Tracking
 
 **The Challenge:** Vehicle position feeds contain Lat/Lon but no delay info. Trip update feeds contain Delay info but no coordinates.
+
 **The SQL Solution:** I created a "Live Mart" that joins these two disparate streams on `trip_id`, allowing me to visualize *where* the delays are happening physically.
 
 ```sql
@@ -79,6 +82,7 @@ LEFT JOIN latest_delays d
 ### 4. Solving the "Midnight Crossing" Bug
 
 **The Challenge:** Raw API data often produced impossible delay values (e.g., `-48,000 seconds`) when a bus scheduled for 23:50 arrived at 00:05. The simplistic timestamp subtraction treated this as "arriving yesterday."
+
 **The SQL Solution:** I implemented a sanity filter in the intermediate layer to enforce realistic bounds, filtering out statistical noise before it hit the dashboard.
 
 ```sql
