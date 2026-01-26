@@ -19,14 +19,13 @@ I built an automated ELT pipeline that captures real-time streams every 20 minut
 The pipeline follows a modern ELT pattern running on Google Cloud Platform.
 
 1. **Extract (Python):** A custom script polls the 511.org API every **20 minutes** to fetch `TripUpdates` and `VehiclePositions` protobuf feeds.
-2. 
-**Load (Cloud Run & BigQuery):** Raw Protobuf data is parsed into JSON and appended to partitioned BigQuery tables (`raw_trip_updates`, `raw_vehicle_positions`) .
+
+2. **Load (Cloud Run & BigQuery):** Raw Protobuf data is parsed into JSON and appended to partitioned BigQuery tables (`raw_trip_updates`, `raw_vehicle_positions`) .
 
 
 3. **Transform (dbt):**
 * **Schedule:** Models are rebuilt **every 1 hour** to provide near real-time analytics.
 * **Layers:** Staging (Deduplication)  Intermediate (Cleaning)  Marts (Business Logic).
-
 
 4. **Visualize (Looker Studio):** A multi-page dashboard featuring historical trends and a real-time geospatial delay heatmap.
 
@@ -144,7 +143,7 @@ Instead of a crowded map of bus dots, I engineered a **Delay Heatmap**.
 
 ## 🛠️ Tech Stack
 
-* **Language:** Python 3 (Ingestion Script)
+* **Language:** Python 3 (Ingestion Script), SQL (Data Transformation)
 * **Orchestration:** Google Cloud Run Scheduler
 * **Data Warehouse:** Google BigQuery
 * **Transformation:** dbt (Data Build Tool) - *Core/Incremental/Snapshot/Testing*
